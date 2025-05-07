@@ -11,16 +11,12 @@ import io
 import zipfile
 import os
 
-# 设置matplotlib支持中文显示
-matplotlib.rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans', 'Arial Unicode MS', 'sans-serif']  # 优先使用的字体列表
-matplotlib.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
-
 # 设置随机种子保证结果可复现
 np.random.seed(42)
 
 # 加载MovieLens数据集
 def load_movielens_data():
-    print("加载MovieLens数据集...")
+    print("Loading MovieLens dataset...")
     
     # 如果数据已经下载过，就直接读取本地文件
     if os.path.exists("ml-latest-small"):
@@ -29,14 +25,14 @@ def load_movielens_data():
     else:
         # 否则从网络下载
         url = "https://files.grouplens.org/datasets/movielens/ml-latest-small.zip"
-        print(f"从 {url} 下载数据...")
+        print(f"Downloading data from {url}...")
         response = requests.get(url)
         with zipfile.ZipFile(io.BytesIO(response.content)) as zip_ref:
             zip_ref.extractall(".")
         ratings_df = pd.read_csv("ml-latest-small/ratings.csv")
         movies_df = pd.read_csv("ml-latest-small/movies.csv")
     
-    print(f"评分数据: {ratings_df.shape[0]} 评分, {ratings_df['userId'].nunique()} 用户, {ratings_df['movieId'].nunique()} 电影")
+    print(f"Rating data: {ratings_df.shape[0]} ratings, {ratings_df['userId'].nunique()} users, {ratings_df['movieId'].nunique()} movies")
     
     # 只选择评分数量较多的电影和活跃用户
     min_user_ratings = 50  # 用户至少评价过的电影数
@@ -59,7 +55,7 @@ def load_movielens_data():
         index='userId', columns='movieId', values='rating'
     ).fillna(0)  # 填充未评分的项为0
     
-    print(f"过滤后的评分矩阵形状: {rating_matrix.shape}")
+    print(f"Filtered rating matrix shape: {rating_matrix.shape}")
     
     # 获取对应的电影信息
     filtered_movies = movies_df[movies_df['movieId'].isin(rating_matrix.columns)]
@@ -85,7 +81,7 @@ def visualize(X_embedded, labels, label_names, title, file_name=None):
     # 添加图例
     handles, _ = scatter.legend_elements()
     legend_labels = [label_names[i] for i in range(len(label_names))]
-    plt.legend(handles, legend_labels, loc="upper right", title="电影类型")
+    plt.legend(handles, legend_labels, loc="upper right", title="Movie Genres")
     
     plt.title(title)
     plt.tight_layout()
@@ -95,59 +91,59 @@ def visualize(X_embedded, labels, label_names, title, file_name=None):
 
 # 1. 主成分分析 (PCA)
 def apply_pca(X):
-    print("\n应用主成分分析(PCA)...")
+    print("\nApplying Principal Component Analysis (PCA)...")
     start_time = time.time()
     pca = PCA(n_components=2)
     X_pca = pca.fit_transform(X)
-    print(f"PCA 完成，耗时: {time.time() - start_time:.2f} 秒")
-    print(f"解释方差占比: {np.sum(pca.explained_variance_ratio_):.4f}")
+    print(f"PCA completed in {time.time() - start_time:.2f} seconds")
+    print(f"Explained variance ratio: {np.sum(pca.explained_variance_ratio_):.4f}")
     return X_pca
 
 # 2. 多维尺度分析 (MDS)
 def apply_mds(X):
-    print("\n应用多维尺度分析(MDS)...")
+    print("\nApplying Multidimensional Scaling (MDS)...")
     start_time = time.time()
     mds = MDS(n_components=2, n_jobs=-1, random_state=42)
     X_mds = mds.fit_transform(X)
-    print(f"MDS 完成，耗时: {time.time() - start_time:.2f} 秒")
+    print(f"MDS completed in {time.time() - start_time:.2f} seconds")
     return X_mds
 
 # 3. 非负矩阵分解 (NMF)
 def apply_nmf(X):
-    print("\n应用非负矩阵分解(NMF)...")
+    print("\nApplying Non-negative Matrix Factorization (NMF)...")
     # 确保数据非负 (对于评分数据通常已经是非负的)
     X_pos = np.maximum(X, 0)
     start_time = time.time()
     nmf = NMF(n_components=2, init='random', random_state=42)
     X_nmf = nmf.fit_transform(X_pos)
-    print(f"NMF 完成，耗时: {time.time() - start_time:.2f} 秒")
+    print(f"NMF completed in {time.time() - start_time:.2f} seconds")
     return X_nmf
 
 # 4. 等度量映射 (Isomap)
 def apply_isomap(X):
-    print("\n应用等度量映射(Isomap)...")
+    print("\nApplying Isometric Mapping (Isomap)...")
     start_time = time.time()
     isomap = Isomap(n_components=2, n_neighbors=10, n_jobs=-1)
     X_isomap = isomap.fit_transform(X)
-    print(f"Isomap 完成，耗时: {time.time() - start_time:.2f} 秒")
+    print(f"Isomap completed in {time.time() - start_time:.2f} seconds")
     return X_isomap
 
 # 5. 局部线性嵌入 (LLE)
 def apply_lle(X):
-    print("\n应用局部线性嵌入(LLE)...")
+    print("\nApplying Locally Linear Embedding (LLE)...")
     start_time = time.time()
     lle = LocallyLinearEmbedding(n_components=2, n_neighbors=10, n_jobs=-1, random_state=42)
     X_lle = lle.fit_transform(X)
-    print(f"LLE 完成，耗时: {time.time() - start_time:.2f} 秒")
+    print(f"LLE completed in {time.time() - start_time:.2f} seconds")
     return X_lle
 
 # 6. t-SNE
 def apply_tsne(X):
-    print("\n应用t-SNE...")
+    print("\nApplying t-SNE...")
     start_time = time.time()
     tsne = TSNE(n_components=2, random_state=42, n_jobs=-1)
     X_tsne = tsne.fit_transform(X)
-    print(f"t-SNE 完成，耗时: {time.time() - start_time:.2f} 秒")
+    print(f"t-SNE completed in {time.time() - start_time:.2f} seconds")
     return X_tsne
 
 def main():
@@ -158,45 +154,45 @@ def main():
     # 转置后每行代表一部电影，每列代表一个用户对该电影的评分
     X = X.T
     
-    print(f"数据矩阵形状: {X.shape}, 表示 {X.shape[0]} 部电影 × {X.shape[1]} 个用户")
-    print(f"电影类型数量: {len(genre_names)}, 类型: {', '.join(genre_names)}")
+    print(f"Data matrix shape: {X.shape}, representing {X.shape[0]} movies × {X.shape[1]} users")
+    print(f"Number of movie genres: {len(genre_names)}, Genres: {', '.join(genre_names)}")
     
     # 应用所有降维方法
     
     # 1. PCA
     X_pca = apply_pca(X)
-    visualize(X_pca, genre_ids, genre_names, "主成分分析 (PCA) - 电影分布", "pca_movies.png")
+    visualize(X_pca, genre_ids, genre_names, "Principal Component Analysis (PCA) - Movie Distribution", "pca_movies.png")
     
     # 2. MDS - 可能会很慢，根据矩阵大小可能需要跳过
     try:
         X_mds = apply_mds(X)
-        visualize(X_mds, genre_ids, genre_names, "多维尺度分析 (MDS) - 电影分布", "mds_movies.png")
+        visualize(X_mds, genre_ids, genre_names, "Multidimensional Scaling (MDS) - Movie Distribution", "mds_movies.png")
     except Exception as e:
-        print(f"MDS 出错: {e}，矩阵可能太大，跳过此方法")
+        print(f"MDS error: {e}, matrix might be too large, skipping this method")
     
     # 3. NMF - 特别适合推荐系统数据
     X_nmf = apply_nmf(X)
-    visualize(X_nmf, genre_ids, genre_names, "非负矩阵分解 (NMF) - 电影分布", "nmf_movies.png")
+    visualize(X_nmf, genre_ids, genre_names, "Non-negative Matrix Factorization (NMF) - Movie Distribution", "nmf_movies.png")
     
     # 4. Isomap
     try:
         X_isomap = apply_isomap(X)
-        visualize(X_isomap, genre_ids, genre_names, "等度量映射 (Isomap) - 电影分布", "isomap_movies.png")
+        visualize(X_isomap, genre_ids, genre_names, "Isometric Mapping (Isomap) - Movie Distribution", "isomap_movies.png")
     except Exception as e:
-        print(f"Isomap 出错: {e}，矩阵可能太大，跳过此方法")
+        print(f"Isomap error: {e}, matrix might be too large, skipping this method")
     
     # 5. LLE
     try:
         X_lle = apply_lle(X)
-        visualize(X_lle, genre_ids, genre_names, "局部线性嵌入 (LLE) - 电影分布", "lle_movies.png")
+        visualize(X_lle, genre_ids, genre_names, "Locally Linear Embedding (LLE) - Movie Distribution", "lle_movies.png")
     except Exception as e:
-        print(f"LLE 出错: {e}，矩阵可能太大，跳过此方法")
+        print(f"LLE error: {e}, matrix might be too large, skipping this method")
     
     # 6. t-SNE
     X_tsne = apply_tsne(X)
-    visualize(X_tsne, genre_ids, genre_names, "t-SNE - 电影分布", "tsne_movies.png")
+    visualize(X_tsne, genre_ids, genre_names, "t-Distributed Stochastic Neighbor Embedding (t-SNE) - Movie Distribution", "tsne_movies.png")
     
-    print("\n所有降维方法已完成！")
+    print("\nAll dimensionality reduction methods completed!")
 
 if __name__ == "__main__":
     main()
